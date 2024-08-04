@@ -252,7 +252,7 @@ OST_NEWLINE_CHAR :: proc() {
 //exclusivley used for checking if the name of a cluster exists...NOT the ID
 //fn- filename, cn- clustername
 OST_CHECK_IF_CLUSTER_EXISTS :: proc(fn: string, cn: string) -> bool {
-	clusterFound: bool
+	clusterFound := false
 	data, readSuccess := os.read_entire_file(fn)
 	if !readSuccess {
 		error1 := utils.new_err(
@@ -264,12 +264,16 @@ OST_CHECK_IF_CLUSTER_EXISTS :: proc(fn: string, cn: string) -> bool {
 		return false
 	}
 	defer delete(data)
-
 	content := string(data)
-	if strings.contains(content, cn) {
-		clusterFound = true
-	} else {
-		clusterFound = false
+	clusters := strings.split(content, "}")
+	for cluster in clusters {
+		fmt.printfln("Cluster: %s", cluster)
+		if strings.contains(cluster, fmt.tprintf("cluster_name : %s", cn)) {
+			clusterFound = true
+		} else {
+			clusterFound = false
+		}
+		break
 	}
 	return clusterFound
 }
@@ -287,7 +291,7 @@ OST_RENAME_CLUSTER :: proc(collection_name: string, old: string, new: string) ->
 	// check if the desired new cluster name already exists
 	if OST_CHECK_IF_CLUSTER_EXISTS(collection_path, new) {
 		fmt.printfln(
-			"Cluster with name:%s%s%s already exists in collection: %s",
+			"Cluster with name:%s%s%s already exists within collection: %s",
 			utils.BOLD,
 			new,
 			utils.RESET,
